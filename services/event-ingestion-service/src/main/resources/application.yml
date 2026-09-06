@@ -13,6 +13,9 @@ spring:
     username: ${POSTGRES_USER:notification_app}
     password: ${POSTGRES_PASSWORD:local_dev_only_change_me}
 
+    hikari:
+      schema: event_ingestion
+
   jpa:
     hibernate:
       # Flyway owns the schema, not Hibernate. 'validate' makes Hibernate check
@@ -20,10 +23,21 @@ spring:
       # 'update' or 'create', which would let two systems fight over the schema.
       ddl-auto: validate
     open-in-view: false
+    properties:
+      hibernate:
+        default_schema: event_ingestion
 
   flyway:
     enabled: true
     locations: classpath:db/migration
+    # This service and notification-service share one physical Postgres instance
+    # (a deliberate v1 simplification - see the shared-DB ADR), but Flyway's
+    # migration history is per-database, not per-service: without separate schemas,
+    # this service's V1/V2 and notification-service's V1/V2 collide on version
+    # number with different SQL/checksums. A dedicated schema per service is what
+    # actually enforces "shared instance, separate ownership" at the DB level.
+    schemas: event_ingestion
+    create-schemas: true
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}

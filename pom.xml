@@ -32,6 +32,7 @@
     <module>libs/event-contract</module>
     <module>libs/common-observability</module>
     <module>services/event-ingestion-service</module>
+    <module>services/notification-service</module>
   </modules>
 
 </project>

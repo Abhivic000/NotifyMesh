@@ -18,3 +18,6 @@ function New-Topic($name, $partitions) {
 }
 
 New-Topic "notification.events" 6
+New-Topic "notification.email"  3
+New-Topic "notification.sms"    3
+New-Topic "notification.push"   3
