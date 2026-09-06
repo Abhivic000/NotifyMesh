@@ -17,6 +17,19 @@
   <name>common-observability</name>
   <description>Cross-cutting helpers shared by services: correlation-ID propagation, the standard API error response shape, logging utilities. No business rules, no shared entities.</description>
 
-  <!-- Dependencies added when we write the first class. -->
+  <dependencies>
+    <!-- jakarta.servlet for the Filter API - "provided" because at runtime the
+         servlet container (embedded Tomcat, brought in by whichever service
+         actually uses this filter) supplies the real implementation. -->
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+  </dependencies>
 
 </project>

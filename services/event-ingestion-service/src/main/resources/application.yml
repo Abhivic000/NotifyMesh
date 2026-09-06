@@ -25,6 +25,25 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        # Producer-level idempotency - a DIFFERENT layer from the DB idempotency check in
+        # EventIngestionService. This one stops the Kafka client itself from writing a
+        # duplicate record when it silently retries a send after a network blip; it says
+        # nothing about duplicate *business* events.
+        enable.idempotence: true
+
+notification:
+  outbox:
+    topic: notification.events
+    poll-interval-ms: 1000
+    batch-size: 50
+
 management:
   endpoints:
     web:
