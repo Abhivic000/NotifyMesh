@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>com.notification</groupId>
+    <artifactId>notification-platform</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>event-contract</artifactId>
+  <packaging>jar</packaging>
+
+  <name>event-contract</name>
+  <description>Shared event envelope DTOs - the wire format producers and consumers both depend on. No business logic, no entities.</description>
+
+  <!-- Dependencies added when we write the first DTO, not before. -->
+
+</project>

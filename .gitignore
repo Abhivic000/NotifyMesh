@@ -1,0 +1,23 @@
+# Secrets / local config
+.env
+
+# Docs are kept local-only by deliberate choice - the GitHub repo shows code
+# only. Phase docs/ADRs still get written after each phase, just not pushed.
+docs/
+event_driven_notification_platform_project_requirement_document.txt
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

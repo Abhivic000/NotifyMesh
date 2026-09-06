@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.16</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.notification</groupId>
+  <artifactId>notification-platform</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>notification-platform</name>
+  <description>Event-driven notification platform (portfolio project)</description>
+
+  <properties>
+    <java.version>21</java.version>
+  </properties>
+
+  <!--
+    Modules are added here as we actually build them (Step 3's phased plan),
+    not all six services upfront - an empty module with no source is dead
+    weight in the reactor and hides which pieces are actually done.
+  -->
+  <modules>
+    <module>libs/event-contract</module>
+    <module>libs/common-observability</module>
+    <module>services/event-ingestion-service</module>
+  </modules>
+
+</project>

@@ -1,0 +1,10 @@
+# mvnw is a Unix shell script - Git on Windows must never convert its line
+# endings to CRLF, or it breaks (and will fail mysteriously in GitHub Actions,
+# which runs on Ubuntu) even though it can appear to "work" locally.
+mvnw            text eol=lf
+*.sh            text eol=lf
+
+mvnw.cmd        text eol=crlf
+*.bat           text eol=crlf
+
+*.jar           binary
