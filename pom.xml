@@ -33,6 +33,7 @@
     <module>libs/common-observability</module>
     <module>services/event-ingestion-service</module>
     <module>services/notification-service</module>
+    <module>services/email-worker</module>
   </modules>
 
 </project>
