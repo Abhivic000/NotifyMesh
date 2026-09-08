@@ -44,4 +44,20 @@ public class IdempotencyGuard {
             return true;
         }
     }
+
+    /**
+     * Used only by an admin-initiated DLQ retry (PRD section 34). The original claim
+     * from before this notification reached the DLQ is still held (up to the 24h TTL)
+     * - without clearing it first, republishing would be silently swallowed by
+     * {@link #tryClaim} as an apparent duplicate, and the retry would never actually
+     * run.
+     */
+    public void clearClaim(String notificationId) {
+        try {
+            redisTemplate.delete(KEY_PREFIX + notificationId);
+        } catch (Exception redisUnavailable) {
+            log.warn("Redis unavailable while clearing idempotency claim for {}: {}",
+                    notificationId, redisUnavailable.getMessage());
+        }
+    }
 }

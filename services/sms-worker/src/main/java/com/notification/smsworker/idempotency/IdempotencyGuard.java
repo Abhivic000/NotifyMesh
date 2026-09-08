@@ -34,4 +34,14 @@ public class IdempotencyGuard {
             return true;
         }
     }
+
+    /** Used only by an admin-initiated DLQ retry - see email-worker's IdempotencyGuard Javadoc. */
+    public void clearClaim(String notificationId) {
+        try {
+            redisTemplate.delete(KEY_PREFIX + notificationId);
+        } catch (Exception redisUnavailable) {
+            log.warn("Redis unavailable while clearing idempotency claim for {}: {}",
+                    notificationId, redisUnavailable.getMessage());
+        }
+    }
 }

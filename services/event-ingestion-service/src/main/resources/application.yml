@@ -64,6 +64,12 @@ notification:
     poll-interval-ms: 1000
     batch-size: 50
 
+security:
+  # No default - a missing secret must fail startup loudly, never silently run
+  # with an empty/guessable key.
+  jwt:
+    secret: ${JWT_SECRET}
+
 management:
   endpoints:
     web:

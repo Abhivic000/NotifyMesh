@@ -96,3 +96,7 @@ notification:
     delays-ms: ${NOTIFICATION_RETRY_DELAYS_MS:5000,30000,120000,600000}
     jitter-factor: ${NOTIFICATION_RETRY_JITTER:0.2}
     poll-interval-ms: ${NOTIFICATION_RETRY_POLL_INTERVAL_MS:2000}
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
