@@ -41,4 +41,18 @@ public class NotificationServiceDataAccess {
                 Timestamp.from(Instant.now()), notificationId
         );
     }
+
+    public void markRetrying(UUID notificationId, int retryCount) {
+        jdbcTemplate.update(
+                "UPDATE notification.notifications SET status = 'RETRYING', retry_count = ? WHERE id = ?",
+                retryCount, notificationId
+        );
+    }
+
+    public void markDlq(UUID notificationId) {
+        jdbcTemplate.update(
+                "UPDATE notification.notifications SET status = 'DLQ', failed_at = ? WHERE id = ?",
+                Timestamp.from(Instant.now()), notificationId
+        );
+    }
 }

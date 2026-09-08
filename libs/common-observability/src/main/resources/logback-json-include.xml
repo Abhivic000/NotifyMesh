@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Shared structured-JSON log format (PRD section 47). Lives here, not copy-pasted
+  into five services, so every service's logs share one schema by construction - a
+  log aggregator (or a human grepping files) never has to handle five slightly
+  different JSON shapes.
+
+  Included from each service's own logback-spring.xml via:
+    <include resource="logback-json-include.xml"/>
+
+  MDC entries - correlationId (CorrelationIdFilter), traceId/spanId (Micrometer
+  Tracing, once Phase 7's tracing setup is active) - are emitted automatically as
+  top-level JSON fields by LogstashEncoder; nothing extra to configure for those.
+-->
+<included>
+    <springProperty scope="context" name="serviceName" source="spring.application.name"/>
+
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <version>[ignore]</version>
+                <logger>logger</logger>
+                <thread>[ignore]</thread>
+                <levelValue>[ignore]</levelValue>
+            </fieldNames>
+            <customFields>{"service":"${serviceName}","environment":"local"}</customFields>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_CONSOLE"/>
+    </root>
+
+    <!-- PRD section 48: don't log every Kafka poll at INFO. -->
+    <logger name="org.apache.kafka.clients.consumer" level="WARN"/>
+    <logger name="org.springframework.kafka" level="WARN"/>
+</included>

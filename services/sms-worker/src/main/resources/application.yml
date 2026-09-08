@@ -41,18 +41,54 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     listener:
       ack-mode: RECORD
+      observation-enabled: true
+
+    template:
+      observation-enabled: true
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus,circuitbreakers,circuitbreakerevents
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      smsProvider:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
 
 notification:
   channels:
     sms-topic: notification.sms
+    sms-dlq-topic: notification.sms.dlq
   provider:
     sms:
       failure-rate: ${SMS_PROVIDER_FAILURE_RATE:0.1}
+    timeout-ms: ${PROVIDER_TIMEOUT_MS:3000}
+    simulated-timeout-latency-ms: ${PROVIDER_SIMULATED_TIMEOUT_LATENCY_MS:5000}
   idempotency:
     ttl-hours: 24
+  ratelimit:
+    per-recipient-per-minute: ${NOTIFICATION_RATE_LIMIT:100}
+  retry:
+    max-attempts: ${NOTIFICATION_RETRY_MAX_ATTEMPTS:5}
+    delays-ms: ${NOTIFICATION_RETRY_DELAYS_MS:5000,30000,120000,600000}
+    jitter-factor: ${NOTIFICATION_RETRY_JITTER:0.2}
+    poll-interval-ms: ${NOTIFICATION_RETRY_POLL_INTERVAL_MS:2000}

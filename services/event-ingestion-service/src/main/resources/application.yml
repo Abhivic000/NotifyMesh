@@ -41,6 +41,12 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    template:
+      # Wraps producer sends in a Micrometer Observation, which is what actually
+      # propagates the current trace context into the outgoing Kafka message's
+      # headers - without this, a trace started at the HTTP layer stops dead the
+      # moment a message hits Kafka.
+      observation-enabled: true
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -62,4 +68,19 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,prometheus
+  tracing:
+    sampling:
+      # 100% sampling - correct for a portfolio demo where you want to SEE every
+      # trace; a real production system would sample a small fraction to control
+      # tracing-backend volume/cost.
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+  metrics:
+    distribution:
+      # Real p95/p99 percentiles need histogram buckets, not just avg/max - this is
+      # what lets Grafana use histogram_quantile() against real data.
+      percentiles-histogram:
+        http.server.requests: true

@@ -8,6 +8,7 @@ import com.notification.event.mapper.EventMapper;
 import com.notification.event.repository.EventRepository;
 import com.notification.event.repository.OutboxEventRepository;
 import com.notification.observability.correlation.CorrelationIdFilter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -24,13 +25,16 @@ public class EventIngestionService {
     private final EventRepository eventRepository;
     private final OutboxEventRepository outboxEventRepository;
     private final EventMapper eventMapper;
+    private final MeterRegistry meterRegistry;
 
     public EventIngestionService(EventRepository eventRepository,
                                   OutboxEventRepository outboxEventRepository,
-                                  EventMapper eventMapper) {
+                                  EventMapper eventMapper,
+                                  MeterRegistry meterRegistry) {
         this.eventRepository = eventRepository;
         this.outboxEventRepository = outboxEventRepository;
         this.eventMapper = eventMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -46,8 +50,11 @@ public class EventIngestionService {
      */
     @Transactional
     public EventIngestionResult ingest(EventEnvelope envelope) {
+        meterRegistry.counter("events_received_total", "eventType", envelope.eventType()).increment();
+
         if (eventRepository.findByEventId(envelope.eventId()).isPresent()) {
             log.info("Duplicate event ignored eventId={}", envelope.eventId());
+            meterRegistry.counter("events_accepted_total", "eventType", envelope.eventType()).increment();
             return new EventIngestionResult(envelope.eventId(), ACCEPTED);
         }
 
@@ -60,9 +67,11 @@ public class EventIngestionService {
             outboxEventRepository.save(outboxEvent);
         } catch (DataIntegrityViolationException raceOnUniqueEventId) {
             log.info("Duplicate event detected via unique constraint eventId={}", envelope.eventId());
+            meterRegistry.counter("events_accepted_total", "eventType", envelope.eventType()).increment();
             return new EventIngestionResult(envelope.eventId(), ACCEPTED);
         }
 
+        meterRegistry.counter("events_accepted_total", "eventType", envelope.eventType()).increment();
         log.info("Event accepted eventId={} eventType={}", envelope.eventId(), envelope.eventType());
         return new EventIngestionResult(envelope.eventId(), ACCEPTED);
     }

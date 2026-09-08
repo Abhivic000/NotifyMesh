@@ -25,9 +25,12 @@ public class MockPushProvider implements NotificationProvider {
     );
 
     private final double failureRate;
+    private final long simulatedTimeoutLatencyMs;
 
-    public MockPushProvider(@Value("${notification.provider.push.failure-rate:0.1}") double failureRate) {
+    public MockPushProvider(@Value("${notification.provider.push.failure-rate:0.1}") double failureRate,
+                             @Value("${notification.provider.simulated-timeout-latency-ms:5000}") long simulatedTimeoutLatencyMs) {
         this.failureRate = failureRate;
+        this.simulatedTimeoutLatencyMs = simulatedTimeoutLatencyMs;
     }
 
     @Override
@@ -35,9 +38,20 @@ public class MockPushProvider implements NotificationProvider {
         if (ThreadLocalRandom.current().nextDouble() < failureRate) {
             FailureMode mode = FAILURE_MODES.get(ThreadLocalRandom.current().nextInt(FAILURE_MODES.size()));
             log.debug("Mock push provider simulating failure: {}", mode.errorCode());
+            if ("PROVIDER_TIMEOUT".equals(mode.errorCode())) {
+                sleepUninterruptibly(simulatedTimeoutLatencyMs);
+            }
             return ProviderResult.failure(mode.errorCode(), mode.retryable(),
                     "Simulated failure: " + mode.errorCode());
         }
         return ProviderResult.success("mock-push-" + UUID.randomUUID(), "202 Accepted (simulated)");
+    }
+
+    private void sleepUninterruptibly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

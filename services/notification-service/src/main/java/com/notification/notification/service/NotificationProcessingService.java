@@ -9,6 +9,7 @@ import com.notification.notification.entity.Template;
 import com.notification.notification.repository.NotificationPreferenceRepository;
 import com.notification.notification.repository.NotificationRepository;
 import com.notification.notification.repository.TemplateRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,6 +38,7 @@ public class NotificationProcessingService {
     private final NotificationPreferenceRepository preferenceRepository;
     private final KafkaTemplate<String, String> channelJobKafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final MeterRegistry meterRegistry;
     private final String emailTopic;
     private final String smsTopic;
     private final String pushTopic;
@@ -46,6 +48,7 @@ public class NotificationProcessingService {
                                           NotificationPreferenceRepository preferenceRepository,
                                           KafkaTemplate<String, String> channelJobKafkaTemplate,
                                           ObjectMapper objectMapper,
+                                          MeterRegistry meterRegistry,
                                           @Value("${notification.channels.email-topic}") String emailTopic,
                                           @Value("${notification.channels.sms-topic}") String smsTopic,
                                           @Value("${notification.channels.push-topic}") String pushTopic) {
@@ -54,6 +57,7 @@ public class NotificationProcessingService {
         this.preferenceRepository = preferenceRepository;
         this.channelJobKafkaTemplate = channelJobKafkaTemplate;
         this.objectMapper = objectMapper;
+        this.meterRegistry = meterRegistry;
         this.emailTopic = emailTopic;
         this.smsTopic = smsTopic;
         this.pushTopic = pushTopic;
@@ -122,6 +126,7 @@ public class NotificationProcessingService {
 
         notification.markQueued();
         notificationRepository.save(notification);
+        meterRegistry.counter("notifications_created_total", "channel", template.getChannel()).increment();
 
         NotificationJob job = new NotificationJob(
                 notification.getId().toString(),

@@ -1,0 +1,44 @@
+{
+  "uid": "kafka-overview",
+  "title": "Kafka",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "title": "Consumer lag by partition", "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "kafka_consumer_fetch_manager_records_lag", "legendFormat": "{{spring_id}} / {{topic}}-{{partition}}" }
+      ]
+    },
+    {
+      "id": 2, "title": "Records consumed rate", "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(kafka_consumer_fetch_manager_records_consumed_total[1m])) by (topic)", "legendFormat": "{{topic}}" }
+      ]
+    },
+    {
+      "id": 3, "title": "Records produced rate", "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "refId": "A", "expr": "sum(rate(kafka_producer_record_send_total[1m])) by (spring_id)", "legendFormat": "{{spring_id}}" }
+      ]
+    },
+    {
+      "id": 4, "title": "Consumer fetch latency (avg)", "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "expr": "kafka_consumer_fetch_manager_fetch_latency_avg", "legendFormat": "{{spring_id}}" }
+      ]
+    }
+  ]
+}
