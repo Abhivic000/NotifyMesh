@@ -34,6 +34,8 @@
     <module>services/event-ingestion-service</module>
     <module>services/notification-service</module>
     <module>services/email-worker</module>
+    <module>services/sms-worker</module>
+    <module>services/push-worker</module>
   </modules>
 
 </project>

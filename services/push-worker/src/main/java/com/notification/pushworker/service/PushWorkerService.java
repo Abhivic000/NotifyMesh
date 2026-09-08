@@ -1,0 +1,75 @@
+package com.notification.pushworker.service;
+
+import com.notification.contract.job.NotificationJob;
+import com.notification.pushworker.entity.DeliveryAttempt;
+import com.notification.pushworker.idempotency.IdempotencyGuard;
+import com.notification.pushworker.integration.NotificationServiceDataAccess;
+import com.notification.pushworker.integration.NotificationServiceDataAccess.TemplateView;
+import com.notification.pushworker.provider.NotificationProvider;
+import com.notification.pushworker.provider.NotificationProvider.ProviderResult;
+import com.notification.pushworker.repository.DeliveryAttemptRepository;
+import com.notification.pushworker.template.TemplateRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+/** Same flow as EmailWorkerService/SmsWorkerService - push has no subject either. */
+@Service
+public class PushWorkerService {
+
+    private static final Logger log = LoggerFactory.getLogger(PushWorkerService.class);
+
+    private final IdempotencyGuard idempotencyGuard;
+    private final NotificationServiceDataAccess notificationData;
+    private final TemplateRenderer templateRenderer;
+    private final NotificationProvider provider;
+    private final DeliveryAttemptRepository deliveryAttemptRepository;
+
+    public PushWorkerService(IdempotencyGuard idempotencyGuard,
+                              NotificationServiceDataAccess notificationData,
+                              TemplateRenderer templateRenderer,
+                              NotificationProvider provider,
+                              DeliveryAttemptRepository deliveryAttemptRepository) {
+        this.idempotencyGuard = idempotencyGuard;
+        this.notificationData = notificationData;
+        this.templateRenderer = templateRenderer;
+        this.provider = provider;
+        this.deliveryAttemptRepository = deliveryAttemptRepository;
+    }
+
+    public void handle(NotificationJob job) {
+        if (!idempotencyGuard.tryClaim(job.notificationId())) {
+            log.info("Notification {} already claimed (duplicate delivery), skipping", job.notificationId());
+            return;
+        }
+
+        TemplateView template = notificationData.findTemplate(UUID.fromString(job.templateId()));
+        String renderedBody = templateRenderer.render(template.body(), job.payload());
+
+        ProviderResult result = provider.send(job.recipient(), renderedBody);
+
+        UUID notificationId = UUID.fromString(job.notificationId());
+        recordAttempt(job.notificationId(), result);
+
+        if (result.success()) {
+            notificationData.markSent(notificationId, result.providerMessageId());
+            log.info("Push sent notificationId={} eventId={} providerMessageId={}",
+                    job.notificationId(), job.eventId(), result.providerMessageId());
+        } else {
+            notificationData.markFailed(notificationId);
+            log.warn("Push delivery failed notificationId={} eventId={} errorCode={} retryable={}",
+                    job.notificationId(), job.eventId(), result.errorCode(), result.retryable());
+        }
+    }
+
+    private void recordAttempt(String notificationId, ProviderResult result) {
+        DeliveryAttempt attempt = new DeliveryAttempt(
+                notificationId, 1,
+                result.success() ? "SUCCESS" : "FAILED",
+                result.rawResponse(), result.errorCode()
+        );
+        deliveryAttemptRepository.save(attempt);
+    }
+}
